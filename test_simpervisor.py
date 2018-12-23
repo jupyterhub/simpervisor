@@ -2,7 +2,7 @@ import asyncio
 import pytest
 import sys
 
-import simperviser
+import simpervisor
 
 SLEEP_TIME = 0.5
 SLEEP_WAIT_TIME = 0.7
@@ -21,7 +21,7 @@ async def test_start_success():
     """
     Start a process & check its running status
     """
-    proc = simperviser.SupervisedProcess(
+    proc = simpervisor.SupervisedProcess(
         *sleep(0), always_restart=False
     )
     await proc.start()
@@ -34,7 +34,7 @@ async def test_start_always_restarting():
     """
     Start a process & check it restarts even when it succeeds
     """
-    proc = simperviser.SupervisedProcess(
+    proc = simpervisor.SupervisedProcess(
         *sleep(0), always_restart=True
     )
     await proc.start()
@@ -54,7 +54,7 @@ async def test_start_fail_restarting():
     """
     Start a process that fails & make sure it restarts
     """
-    proc = simperviser.SupervisedProcess(
+    proc = simpervisor.SupervisedProcess(
         *sleep(1), always_restart=True
     )
     await proc.start()
@@ -75,7 +75,7 @@ async def test_start_multiple_start():
     """
     Starting the same process multiple times should be a noop
     """
-    proc = simperviser.SupervisedProcess(
+    proc = simpervisor.SupervisedProcess(
         *sleep(0), always_restart=True
     )
     await proc.start()
