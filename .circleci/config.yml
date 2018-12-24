@@ -31,3 +31,9 @@ jobs:
           command: |
             . venv/bin/activate
             py.test --log-cli-level DEBUG --cov=simpervisor test_simpervisor.py
+
+      - run:
+          name: upload code coverage stats
+          command: |
+            . venv/bin/activate
+            codecov
