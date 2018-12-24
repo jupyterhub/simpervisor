@@ -2,11 +2,13 @@
 Simple asynchronous process supervisor
 """
 import asyncio
+import logging
 
 
 class SupervisedProcess:
-    def __init__(self, *args, always_restart=False, **kwargs):
+    def __init__(self, name, *args, always_restart=False, **kwargs):
         self.always_restart = always_restart
+        self.name = name
         self._proc_args = args
         self._proc_kwargs = kwargs
         self.proc: asyncio.Process = None
@@ -20,6 +22,19 @@ class SupervisedProcess:
         # Only one coroutine should be starting or killing a process at a time
         self._start_stop_lock = asyncio.Lock()
 
+        self.log = logging.getLogger('simpervisor')
+
+    def _debug_log(self, action, message, extras=None):
+        base_extras = {
+            'action': action,
+            'proccess-name': self.name,
+            'process-args': self._proc_args,
+            'process-kwargs': self._proc_kwargs
+        }
+        if extras:
+            base_extras.update(extras)
+        self.log.debug(message, extra=base_extras)
+
     async def start(self):
         """
         Start the process
@@ -28,9 +43,12 @@ class SupervisedProcess:
             if self.running:
                 # Don't wanna start it again, if we're already running
                 return
+            self._debug_log('try-start', f'Trying to start {self.name}',)
             self.proc = await asyncio.create_subprocess_exec(
                 *self._proc_args, **self._proc_kwargs
             )
+            self._debug_log('started', f'Started {self.name}',)
+
         self._killed = False
         self.running = True
 
@@ -39,6 +57,10 @@ class SupervisedProcess:
 
     async def _restart_process_if_needed(self):
         retcode = await self.proc.wait()
+        self._debug_log(
+            'exited', f'{self.name} exited with code {retcode}',
+            {'code': retcode}
+        )
         self.running = False
         if (not self._killed) and (self.always_restart or retcode != 0):
             await self.start()
@@ -46,8 +68,15 @@ class SupervisedProcess:
     async def kill(self):
         self._killed = True
         with (await self._start_stop_lock):
+            self._debug_log('killing', f'Killing {self.name}')
             self.proc.kill()
-        return await self.proc.wait()
+            retcode = await self.proc.wait()
+            self._debug_log(
+                'killed',
+                f'Killed {self.name}, with retcode {retcode}', extras={'code': retcode}
+            )
+            self.running = False
+        return retcode
 
     @property
     def pid(self):

@@ -1,6 +1,8 @@
+import inspect
 import asyncio
 import pytest
 import sys
+import logging
 
 import simpervisor
 
@@ -22,7 +24,7 @@ async def test_start_success():
     Start a process & check its running status
     """
     proc = simpervisor.SupervisedProcess(
-        *sleep(0), always_restart=False
+        inspect.currentframe().f_code.co_name, *sleep(0), always_restart=False
     )
     await proc.start()
     assert proc.running
@@ -35,7 +37,7 @@ async def test_start_always_restarting():
     Start a process & check it restarts even when it succeeds
     """
     proc = simpervisor.SupervisedProcess(
-        *sleep(0), always_restart=True
+        inspect.currentframe().f_code.co_name, *sleep(0), always_restart=True
     )
     await proc.start()
     assert proc.running
@@ -55,7 +57,7 @@ async def test_start_fail_restarting():
     Start a process that fails & make sure it restarts
     """
     proc = simpervisor.SupervisedProcess(
-        *sleep(1), always_restart=True
+        inspect.currentframe().f_code.co_name, *sleep(1), always_restart=True
     )
     await proc.start()
     assert proc.running
@@ -76,7 +78,7 @@ async def test_start_multiple_start():
     Starting the same process multiple times should be a noop
     """
     proc = simpervisor.SupervisedProcess(
-        *sleep(0), always_restart=True
+        inspect.currentframe().f_code.co_name, *sleep(0), always_restart=True
     )
     await proc.start()
     assert proc.running
@@ -84,3 +86,6 @@ async def test_start_multiple_start():
     await proc.start()
     assert proc.running
     assert proc.pid == first_pid
+
+    await proc.kill()
+    assert not proc.running
