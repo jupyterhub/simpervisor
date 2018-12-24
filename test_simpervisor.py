@@ -7,7 +7,7 @@ import logging
 import simpervisor
 
 SLEEP_TIME = 0.1
-SLEEP_WAIT_TIME = 0.3
+SLEEP_WAIT_TIME = 0.5
 
 def sleep(retcode=0, time=SLEEP_TIME):
     """
