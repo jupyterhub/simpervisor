@@ -21,6 +21,9 @@ class SupervisedProcess:
         # Don't restart process if we explicitly kill it
         self._killed = False
 
+        # Don't restart process if we are terminating after SIGTERM / SIGINT
+        self._terminating = False
+
         # Only one coroutine should be starting or killing a process at a time
         self._start_stop_lock = asyncio.Lock()
 
@@ -38,8 +41,16 @@ class SupervisedProcess:
         self.log.debug(message, extra=base_extras)
 
     def _handle_signal(self, signal):
+        # Child processes should handle SIGTERM / SIGINT & close,
+        # which should trigger self._restart_process_if_needed
+        # We don't explicitly reap child processe
         self.proc.send_signal(signal)
+        # Don't restart process after it is reaped
+        self._terminating = True
         self._debug_log('signal', f'Propagated signal {signal} to {self.name}')
+
+    def wait(self):
+        return self.proc.wait()
 
     async def start(self):
         """
@@ -70,7 +81,7 @@ class SupervisedProcess:
             {'code': retcode}
         )
         self.running = False
-        if (not self._killed) and (self.always_restart or retcode != 0):
+        if (not self._terminating) and (not self._killed) and (self.always_restart or retcode != 0):
             await self.start()
 
     async def kill(self):
