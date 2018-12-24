@@ -9,26 +9,20 @@ import os
 import time
 
 
-@pytest.mark.parametrize('signum', [signal.SIGTERM, signal.SIGINT])
-def test_sigterm(signum):
-    CHILD_CODE = dedent(f"""
-    import asyncio
-    import signal
-    import sys
-    from simpervisor import atexitasync 
-    def _handle_sigterm(received_signum):
-        # Print the received signum so we know our handler was called
-        print("Received", int(received_signum), flush=True)
-    atexitasync.add_handler(_handle_sigterm)
-    loop = asyncio.get_event_loop()
-    try:
-        loop.run_forever()
-    finally:
-        # Cleanup properly so we get a clean exit
-        loop.run_until_complete(asyncio.gather(*asyncio.Task.all_tasks()))
-        loop.close()
-    """)
-    proc = subprocess.Popen([sys.executable, '-c', CHILD_CODE], stdout=subprocess.PIPE)
+@pytest.mark.parametrize('signum, handlercount', [
+    (signal.SIGTERM, 1), (signal.SIGINT, 1),
+    (signal.SIGTERM, 5), (signal.SIGINT, 5),
+])
+def test_atexitasync(signum, handlercount):
+    """
+    Test signal handlers receive signals properly
+    """
+    signalprinter_file = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        'child_scripts',
+        'signalprinter.py'
+    )
+    proc = subprocess.Popen([sys.executable, signalprinter_file, str(handlercount)], stdout=subprocess.PIPE)
 
     # Give the process time to register signal handlers
     time.sleep(0.5)
@@ -36,7 +30,12 @@ def test_sigterm(signum):
 
     # Make sure the signal is handled by our handler in the code
     stdout, stderr = proc.communicate()
-    assert stdout.decode() == f"Received {signum}\n"
+    expected_output = '\n'.join([
+        f'handler {i} received {signum}'
+        for i in range(handlercount)
+    ]) + '\n'
+
+    assert stdout.decode() == expected_output
 
     # The code should exit cleanly
     retcode = proc.wait()
