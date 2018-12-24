@@ -30,7 +30,7 @@ jobs:
           name: run tests
           command: |
             . venv/bin/activate
-            py.test --log-cli-level DEBUG --cov=simpervisor test_simpervisor.py
+            py.test --log-cli-level DEBUG --cov=simpervisor tests/
 
       - run:
           name: upload code coverage stats
