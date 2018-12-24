@@ -1,8 +1,10 @@
 """
 Simple asynchronous process supervisor
 """
+import signal
 import asyncio
 import logging
+from simpervisor import atexitasync
 
 
 class SupervisedProcess:
@@ -35,6 +37,10 @@ class SupervisedProcess:
             base_extras.update(extras)
         self.log.debug(message, extra=base_extras)
 
+    def _handle_signal(self, signal):
+        self.proc.send_signal(signal)
+        self._debug_log('signal', f'Propagated signal {signal} to {self.name}')
+
     async def start(self):
         """
         Start the process
@@ -54,9 +60,11 @@ class SupervisedProcess:
 
         # Spin off a coroutine to watch, reap & restart process if needed
         asyncio.ensure_future(self._restart_process_if_needed())
+        atexitasync.add_handler(self._handle_signal)
 
     async def _restart_process_if_needed(self):
         retcode = await self.proc.wait()
+        atexitasync.remove_handler(self._handle_signal)
         self._debug_log(
             'exited', f'{self.name} exited with code {retcode}',
             {'code': retcode}
