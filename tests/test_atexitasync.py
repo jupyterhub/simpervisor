@@ -31,7 +31,7 @@ def test_sigterm(signum):
     proc = subprocess.Popen([sys.executable, '-c', CHILD_CODE], stdout=subprocess.PIPE)
 
     # Give the process time to register signal handlers
-    time.sleep(0.2)
+    time.sleep(0.5)
     proc.send_signal(signum)
 
     # Make sure the signal is handled by our handler in the code
