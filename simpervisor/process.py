@@ -21,8 +21,8 @@ class SupervisedProcess:
         # Don't restart process if we explicitly kill it
         self._killed = False
 
-        # Only one coroutine should be starting or killing a process at a time
-        self._start_stop_lock = asyncio.Lock()
+        # The 'process' is a shared resource, and protected by this lock
+        self._proc_lock = asyncio.Lock()
 
         self.log = logging.getLogger('simpervisor')
 
@@ -50,7 +50,7 @@ class SupervisedProcess:
         """
         Start the process
         """
-        with (await self._start_stop_lock):
+        with (await self._proc_lock):
             if self.running:
                 # Don't wanna start it again, if we're already running
                 return
@@ -81,7 +81,7 @@ class SupervisedProcess:
 
     async def _signal_and_wait(self, signum):
         # We don't want this to race with start
-        with (await self._start_stop_lock):
+        with (await self._proc_lock):
             # Don't yield control between sending signal & calling wait
             # This way, we don't end up in a call to _restart_process_if_needed
             # and possibly restarting. We also set _killed, just to be sure.
