@@ -94,6 +94,24 @@ async def test_start_multiple_start():
     assert not proc.running
 
 
+@pytest.mark.parametrize('method', ['start', 'kill', 'terminate'])
+@pytest.mark.asyncio
+async def test_method_after_kill(method):
+    """
+    Running 'method' on process after it has been killed should throw
+    """
+    proc = simpervisor.SupervisedProcess(
+        inspect.currentframe().f_code.co_name, *sleep(0), always_restart=True
+    )
+    await proc.start()
+    assert proc.running
+    await proc.kill()
+    assert not proc.running
+
+    with pytest.raises(simpervisor.KilledProcessError):
+        await getattr(proc, method)()
+
+
 @pytest.mark.asyncio
 async def test_kill():
     """

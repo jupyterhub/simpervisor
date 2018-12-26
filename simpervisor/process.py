@@ -6,6 +6,14 @@ import asyncio
 import logging
 from simpervisor import atexitasync
 
+class KilledProcessError(Exception):
+    """
+    Raised when a process that has been explicitly killed is started again.
+
+    Each SupervisedProcess can be killed only once.
+    """
+    pass
+
 class SupervisedProcess:
     def __init__(self, name, *args, always_restart=False, **kwargs):
         self.always_restart = always_restart
@@ -71,7 +79,7 @@ class SupervisedProcess:
                 # Don't wanna start it again, if we're already running
                 return
             if self._killed:
-                raise
+                raise  KilledProcessError(f"Process {self.name} has already been explicitly killed")
             self._debug_log('try-start', f'Trying to start {self.name}',)
             self.proc = await asyncio.create_subprocess_exec(
                 *self._proc_args, **self._proc_kwargs
@@ -138,18 +146,21 @@ class SupervisedProcess:
 
         Might take a while if the process catches & ignores SIGTERM.
         """
+        if self._killed:
+            raise  KilledProcessError(f"Process {self.name} has already been explicitly killed")
         return await self._signal_and_wait(signal.SIGTERM)
 
     async def kill(self):
         """
         Send SIGKILL to process & reap it
         """
+        if self._killed:
+            raise  KilledProcessError(f"Process {self.name} has already been explicitly killed")
         return await self._signal_and_wait(signal.SIGKILL)
 
     # Pass through methods specific methods from proc
     # We don't pass through everything, just a subset we know is safe
     # and would work.
-
     @property
     def pid(self):
         return self.proc.pid

@@ -1,1 +1,1 @@
-from simpervisor.process import SupervisedProcess
+from simpervisor.process import SupervisedProcess, KilledProcessError
