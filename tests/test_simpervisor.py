@@ -1,5 +1,8 @@
 import inspect
+import os
+import signal
 import asyncio
+import errno
 import pytest
 import sys
 import logging
@@ -48,7 +51,7 @@ async def test_start_always_restarting():
     # Make sure it is a new process
     assert proc.pid != first_pid
 
-    await proc.kill()
+    await proc.terminate()
     assert not proc.running
 
 @pytest.mark.asyncio
@@ -68,7 +71,7 @@ async def test_start_fail_restarting():
     # Make sure it is a new process
     assert proc.pid != first_pid
 
-    await proc.kill()
+    await proc.terminate()
     assert not proc.running
 
 
@@ -87,5 +90,41 @@ async def test_start_multiple_start():
     assert proc.running
     assert proc.pid == first_pid
 
-    await proc.kill()
+    await proc.terminate()
     assert not proc.running
+
+
+@pytest.mark.asyncio
+async def test_kill():
+    """
+    Test killing processes
+    """
+    proc = simpervisor.SupervisedProcess(
+        inspect.currentframe().f_code.co_name, *sleep(0), always_restart=True
+    )
+
+    await proc.start()
+    await proc.kill()
+    assert proc.returncode == -signal.SIGKILL
+    assert not proc.running
+    with pytest.raises(OSError) as e:
+        os.kill(proc.pid, 0)
+    assert e.value.errno == errno.ESRCH
+
+
+@pytest.mark.asyncio
+async def test_terminate():
+    """
+    Test terminating processes
+    """
+    proc = simpervisor.SupervisedProcess(
+        inspect.currentframe().f_code.co_name, *sleep(0), always_restart=True
+    )
+
+    await proc.start()
+    await proc.terminate()
+    assert proc.returncode == -signal.SIGTERM
+    assert not proc.running
+    with pytest.raises(OSError) as e:
+        os.kill(proc.pid, 0)
+    assert e.value.errno == errno.ESRCH

@@ -21,9 +21,6 @@ class SupervisedProcess:
         # Don't restart process if we explicitly kill it
         self._killed = False
 
-        # Don't restart process if we are terminating after SIGTERM / SIGINT
-        self._terminating = False
-
         # Only one coroutine should be starting or killing a process at a time
         self._start_stop_lock = asyncio.Lock()
 
@@ -46,11 +43,8 @@ class SupervisedProcess:
         # We don't explicitly reap child processe
         self.proc.send_signal(signal)
         # Don't restart process after it is reaped
-        self._terminating = True
+        self._killed = True
         self._debug_log('signal', f'Propagated signal {signal} to {self.name}')
-
-    def wait(self):
-        return self.proc.wait()
 
     async def start(self):
         """
@@ -66,11 +60,11 @@ class SupervisedProcess:
             )
             self._debug_log('started', f'Started {self.name}',)
 
-        self._killed = False
-        self.running = True
+            self._killed = False
+            self.running = True
 
         # Spin off a coroutine to watch, reap & restart process if needed
-        asyncio.ensure_future(self._restart_process_if_needed())
+        self._restart_process_future = asyncio.ensure_future(self._restart_process_if_needed())
         atexitasync.add_handler(self._handle_signal)
 
     async def _restart_process_if_needed(self):
@@ -81,22 +75,44 @@ class SupervisedProcess:
             {'code': retcode}
         )
         self.running = False
-        if (not self._terminating) and (not self._killed) and (self.always_restart or retcode != 0):
+        if (not self._killed) and (self.always_restart or retcode != 0):
             await self.start()
 
-    async def kill(self):
-        self._killed = True
+
+    async def _signal_and_wait(self, signum):
+        # We don't want this to race with start
         with (await self._start_stop_lock):
-            self._debug_log('killing', f'Killing {self.name}')
-            self.proc.kill()
-            retcode = await self.proc.wait()
-            self._debug_log(
-                'killed',
-                f'Killed {self.name}, with retcode {retcode}', extras={'code': retcode}
-            )
+            # Don't yield control between sending signal & calling wait
+            # This way, we don't end up in a call to _restart_process_if_needed
+            # and possibly restarting. We also set _killed, just to be sure.
+            self.proc.send_signal(signum)
+            self._killed = True
+            self._restart_process_future.cancel()
+            await self.proc.wait()
             self.running = False
-        return retcode
+
+    async def terminate(self):
+        """
+        Send SIGTERM to process & reap it.
+
+        Might take a while if the process catches & ignores SIGTERM.
+        """
+        return await self._signal_and_wait(signal.SIGTERM)
+
+    async def kill(self):
+        """
+        Send SIGKILL to process & reap it
+        """
+        return await self._signal_and_wait(signal.SIGKILL)
+
+    # Pass through methods specific methods from proc
+    # We don't pass through everything, just a subset we know is safe
+    # and would work.
 
     @property
     def pid(self):
         return self.proc.pid
+
+    @property
+    def returncode(self):
+        return self.proc.returncode
