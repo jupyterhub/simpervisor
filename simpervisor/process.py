@@ -3,6 +3,7 @@ Simple asynchronous process supervisor
 """
 import signal
 import asyncio
+import time
 import logging
 from simpervisor import atexitasync
 
@@ -15,11 +16,13 @@ class KilledProcessError(Exception):
     pass
 
 class SupervisedProcess:
-    def __init__(self, name, *args, always_restart=False, **kwargs):
+    def __init__(self, name, *args, always_restart=False, ready_func=None, ready_timeout=5, **kwargs):
         self.always_restart = always_restart
         self.name = name
         self._proc_args = args
         self._proc_kwargs = kwargs
+        self.ready_func = ready_func
+        self.ready_timeout = ready_timeout
         self.proc: asyncio.Process = None
 
         # asyncio.Process has no 'poll', so we keep that state internally
@@ -104,6 +107,7 @@ class SupervisedProcess:
         exits. If we restart the process, `start()` sets this up again.
         """
         retcode = await self.proc.wait()
+        # FIXME: Do we need to aquire a lock somewhere in this method?
         atexitasync.remove_handler(self._handle_signal)
         self._debug_log(
             'exited', f'{self.name} exited with code {retcode}',
@@ -157,6 +161,55 @@ class SupervisedProcess:
         if self._killed:
             raise  KilledProcessError(f"Process {self.name} has already been explicitly killed")
         return await self._signal_and_wait(signal.SIGKILL)
+
+
+    async def ready(self):
+        """
+        Wait for process to become 'ready'
+        """
+        # FIXME: Should this be internal and part of 'start'?
+        # FIXME: Do we need some locks here?
+        # Repeatedly run ready_func with a timeout until it returns true
+        # FIXME, parameterize these numbers
+        start_time = time.time()
+        wait_time = 0.01
+
+        while True:
+            if time.time() - start_time > self.ready_timeout:
+                # We have exceeded our timeout, so return
+                return False
+
+            # Make sure we haven't been killed yet since the last loop
+            # We explicitly do *not* check if we are running, since we might be
+            # restarting in a loop while the readyness check is happening
+            if self._killed or not self.proc:
+                return False
+
+            # FIXME: What's the timeout for each readyness check handler?
+            # FIXME: We should probably check again if our process is still running
+            # FIXME: Should we be locking something here?
+            is_ready = await asyncio.wait_for(self.ready_func(self), 1)
+            cur_time = time.time() - start_time
+            self._debug_log(
+                'ready-wait',
+                f'Readyness: {is_ready} after {cur_time} seconds, next check in {wait_time}s',
+                {'wait_time': wait_time, 'ready': is_ready, 'elapsed_time': cur_time}
+            )
+            if is_ready:
+                return True
+            await asyncio.sleep(wait_time)
+
+            # FIXME: Be more sophisticated here with backoff & jitter
+            wait_time = 2 * wait_time
+            if (time.time() + wait_time) > (start_time + self.ready_timeout):
+                # If we wait for wait_time, we'll be over the ready_timeout
+                # So let's clamp wait_time so that wait_time is just enough
+                # to get us to ready_timeout seconds since start_time
+                # FIXME: This means wait_time can be negative...
+                wait_time = (start_time + self.ready_timeout) - time.time() - 0.01
+
+        return False
+
 
     # Pass through methods specific methods from proc
     # We don't pass through everything, just a subset we know is safe
