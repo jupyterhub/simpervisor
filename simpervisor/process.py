@@ -16,7 +16,7 @@ class KilledProcessError(Exception):
     pass
 
 class SupervisedProcess:
-    def __init__(self, name, *args, always_restart=False, ready_func=None, ready_timeout=5, **kwargs):
+    def __init__(self, name, *args, always_restart=False, ready_func=None, ready_timeout=5, log=None,**kwargs):
         self.always_restart = always_restart
         self.name = name
         self._proc_args = args
@@ -24,6 +24,10 @@ class SupervisedProcess:
         self.ready_func = ready_func
         self.ready_timeout = ready_timeout
         self.proc: asyncio.Process = None
+        if log is None:
+            self.log = logging.getLogger('simpervisor')
+        else:
+            self.log = log
 
         # asyncio.Process has no 'poll', so we keep that state internally
         self.running = False
@@ -38,8 +42,6 @@ class SupervisedProcess:
         # the process, that doesn't require the lock to be held - since sending
         # signals is synchronous.
         self._proc_lock = asyncio.Lock()
-
-        self.log = logging.getLogger('simpervisor')
 
     def _debug_log(self, action, message, extras=None):
         """
