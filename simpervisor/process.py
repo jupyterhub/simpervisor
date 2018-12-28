@@ -188,7 +188,10 @@ class SupervisedProcess:
             # FIXME: What's the timeout for each readyness check handler?
             # FIXME: We should probably check again if our process is still running
             # FIXME: Should we be locking something here?
-            is_ready = await asyncio.wait_for(self.ready_func(self), 1)
+            try:
+                is_ready = await asyncio.wait_for(self.ready_func(self), 1)
+            except asyncio.TimeoutError:
+                is_ready = False
             cur_time = time.time() - start_time
             self._debug_log(
                 'ready-wait',
