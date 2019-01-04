@@ -43,7 +43,7 @@ class SupervisedProcess:
         # signals is synchronous.
         self._proc_lock = asyncio.Lock()
 
-    def _debug_log(self, action, message, extras=None):
+    def _debug_log(self, action, message, extras=None, *args):
         """
         Log debug message with some added meta information.
 
@@ -57,7 +57,7 @@ class SupervisedProcess:
         }
         if extras:
             base_extras.update(extras)
-        self.log.debug(message, extra=base_extras)
+        self.log.debug(message, extra=base_extras, *args)
 
     def _handle_signal(self, signal):
         # Child processes should handle SIGTERM / SIGINT & close,
@@ -66,7 +66,7 @@ class SupervisedProcess:
         self.proc.send_signal(signal)
         # Don't restart process after it is reaped
         self._killed = True
-        self._debug_log('signal', f'Propagated signal {signal} to {self.name}')
+        self._debug_log('signal', 'Propagated signal {} to {}', {}, signal, self.name)
 
     async def start(self):
         """
@@ -85,11 +85,11 @@ class SupervisedProcess:
                 return
             if self._killed:
                 raise  KilledProcessError(f"Process {self.name} has already been explicitly killed")
-            self._debug_log('try-start', f'Trying to start {self.name}',)
+            self._debug_log('try-start', 'Trying to start {}', {}, self.name)
             self.proc = await asyncio.create_subprocess_exec(
                 *self._proc_args, **self._proc_kwargs
             )
-            self._debug_log('started', f'Started {self.name}',)
+            self._debug_log('started', 'Started {}', {}, self.name)
 
             self._killed = False
             self.running = True
@@ -112,8 +112,9 @@ class SupervisedProcess:
         # FIXME: Do we need to aquire a lock somewhere in this method?
         atexitasync.remove_handler(self._handle_signal)
         self._debug_log(
-            'exited', f'{self.name} exited with code {retcode}',
-            {'code': retcode}
+            'exited', '{} exited with code {}',
+            {'code': retcode},
+            self.name, retcode
         )
         self.running = False
         if (not self._killed) and (self.always_restart or retcode != 0):
@@ -197,8 +198,9 @@ class SupervisedProcess:
             cur_time = time.time() - start_time
             self._debug_log(
                 'ready-wait',
-                f'Readyness: {is_ready} after {cur_time} seconds, next check in {wait_time}s',
-                {'wait_time': wait_time, 'ready': is_ready, 'elapsed_time': cur_time}
+                'Readyness: {} after {} seconds, next check in {}s',
+                {'wait_time': wait_time, 'ready': is_ready, 'elapsed_time': cur_time},
+                is_ready, cur_time, wait_time
             )
             if is_ready:
                 return True

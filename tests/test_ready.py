@@ -22,14 +22,14 @@ async def test_ready():
     ready_time = 3.0
 
     async def _ready_func(p):
-        url = f'http://localhost:{port}'
+        url = 'http://localhost:{}'.format(port)
         async with aiohttp.ClientSession() as session:
             try:
                 async with session.get(url) as resp:
-                    logging.debug(f'Got code {resp.status} back from {url}')
+                    logging.debug('Got code {} back from {}', resp.status, url)
                     return resp.status == 200
             except aiohttp.ClientConnectionError:
-                logging.debug(f'Connection to {url} refused')
+                logging.debug('Connection to {} refused', url)
                 return False
 
     proc = SupervisedProcess(

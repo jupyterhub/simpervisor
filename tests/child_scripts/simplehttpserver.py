@@ -7,7 +7,7 @@ import sys
 from aiohttp import web
 
 wait_time = float(sys.argv[1])
-print(f'waiting {wait_time}')
+print('waiting',  wait_time)
 time.sleep(wait_time)
 
 PORT = os.environ['PORT']
