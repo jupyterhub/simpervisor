@@ -23,7 +23,7 @@ class SupervisedProcess:
         self._proc_kwargs = kwargs
         self.ready_func = ready_func
         self.ready_timeout = ready_timeout
-        self.proc: asyncio.Process = None
+        self.proc = None
         if log is None:
             self.log = logging.getLogger('simpervisor')
         else:
