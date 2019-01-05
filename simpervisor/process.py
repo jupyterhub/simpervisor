@@ -57,7 +57,8 @@ class SupervisedProcess:
         }
         if extras:
             base_extras.update(extras)
-        self.log.debug(message, extra=base_extras, *args)
+        # Call .format() explicitly here, since we wanna use new style {} formatting
+        self.log.debug(message.format(*args), extra=base_extras)
 
     def _handle_signal(self, signal):
         # Child processes should handle SIGTERM / SIGINT & close,
