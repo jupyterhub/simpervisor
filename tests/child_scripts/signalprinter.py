@@ -23,4 +23,5 @@ finally:
     try:
         remaining_tasks = asyncio.all_tasks(loop=loop)
     except AttributeError:
+        # asyncio.all_tasks was added in 3. Provides reverse compatability.
         remaining_tasks = asyncio.Task.all_tasks(loop=loop)
