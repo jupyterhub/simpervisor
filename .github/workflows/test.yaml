@@ -1,0 +1,45 @@
+# This is a GitHub workflow defining a set of jobs with a set of steps.
+# ref: https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions
+---
+name: Test
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python-version: "3.6"
+          - python-version: "3.7"
+          - python-version: "3.8"
+          - python-version: "3.9"
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install
+        run: |
+          pip install -r dev-requirements.txt
+          pip install -e .
+
+      - name: Test
+        run: |
+          pytest --verbose --maxfail 3 --color=yes --log-cli-level DEBUG --cov=simpervisor tests/
+
+      # GitHub action reference: https://github.com/codecov/codecov-action
+      - name: Upload code test coverage
+        uses: codecov/codecov-action@v1
+        if: github.ref == 'refs/heads/master'
