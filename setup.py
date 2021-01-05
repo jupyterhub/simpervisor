@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="simpervisor",
-    version='0.3',
+    version='0.4',
     url="https://github.com/yuvipanda/simpervisor",
     description='Simple async process supervisor',
     author="Yuvi Panda",
