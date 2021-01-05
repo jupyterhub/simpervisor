@@ -5,7 +5,7 @@ import asyncio
 import signal
 from functools import partial
 import sys
-from simpervisor import atexitasync 
+from simpervisor import atexitasync
 
 def _handle_sigterm(number, received_signum):
     # Print the received signum so we know our handler was called
@@ -20,5 +20,10 @@ try:
     loop.run_forever()
 finally:
     # Cleanup properly so we get a clean exit
-    loop.run_until_complete(asyncio.gather(*asyncio.Task.all_tasks()))
+    try:
+        remaining_tasks = asyncio.all_tasks(loop=loop)
+    except AttributeError:
+        # asyncio.all_tasks was added in 3. Provides reverse compatability.
+        remaining_tasks = asyncio.Task.all_tasks(loop=loop)
+    loop.run_until_complete(asyncio.gather(*remaining_tasks))
     loop.close()

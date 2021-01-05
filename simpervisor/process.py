@@ -80,7 +80,7 @@ class SupervisedProcess:
         # We could concurrently be in any other part of the code where
         # process is started or killed. So we check for that as soon
         # as we aquire the lock and behave accordingly.
-        with (await self._proc_lock):
+        async with self._proc_lock:
             if self.running:
                 # Don't wanna start it again, if we're already running
                 return
@@ -133,7 +133,7 @@ class SupervisedProcess:
         """
 
         # Aquire lock to modify process sate
-        with (await self._proc_lock):
+        async with self._proc_lock:
             # Don't yield control between sending signal & calling wait
             # This way, we don't end up in a call to _restart_process_if_needed
             # and possibly restarting. We also set _killed, just to be sure.
