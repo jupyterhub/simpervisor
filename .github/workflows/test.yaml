@@ -8,12 +8,8 @@ on:
   push:
   workflow_dispatch:
 
-defaults:
-  run:
-    shell: bash
-
 jobs:
-  build:
+  pytest:
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
@@ -42,4 +38,4 @@ jobs:
       # GitHub action reference: https://github.com/codecov/codecov-action
       - name: Upload code test coverage
         uses: codecov/codecov-action@v1
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/main'
