@@ -50,7 +50,7 @@ jobs:
 
       - name: Test
         run: |
-          pytest --verbose --maxfail=3 --color=yes --log-cli-level=DEBUG --cov=simpervisor tests/
+          pytest --maxfail=3 --log-cli-level=DEBUG --cov=simpervisor tests/
 
       # GitHub action reference: https://github.com/codecov/codecov-action
       - uses: codecov/codecov-action@v3

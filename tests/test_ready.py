@@ -6,7 +6,6 @@ from simpervisor import SupervisedProcess
 import aiohttp
 import logging
 
-@pytest.mark.asyncio
 async def test_ready():
     """
     Test web app's readyness
