@@ -18,7 +18,7 @@ def sleep(retcode=0, time=SLEEP_TIME):
     """
     return [
         sys.executable,
-        '-c', 'import sys, time; time.sleep({}); sys.exit({})'.format(time, retcode)
+        '-c', f'import sys, time; time.sleep({time}); sys.exit({retcode})'
     ]
 
 async def test_start_success():

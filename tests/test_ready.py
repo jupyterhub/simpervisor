@@ -23,7 +23,7 @@ async def test_ready():
     ready_time = 3.0
 
     async def _ready_func(p):
-        url = 'http://localhost:{}'.format(port)
+        url = f'http://localhost:{port}'
         async with aiohttp.ClientSession() as session:
             try:
                 async with session.get(url) as resp:

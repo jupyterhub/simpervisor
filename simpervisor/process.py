@@ -87,7 +87,7 @@ class SupervisedProcess:
                 # Don't wanna start it again, if we're already running
                 return
             if self._killed:
-                raise  KilledProcessError("Process {} has already been explicitly killed".format(self.name))
+                raise  KilledProcessError(f"Process {self.name} has already been explicitly killed")
             self._debug_log('try-start', 'Trying to start {}', {}, self.name)
             self.proc = await asyncio.create_subprocess_exec(
                 *self._proc_args, **self._proc_kwargs
@@ -157,7 +157,7 @@ class SupervisedProcess:
         Might take a while if the process catches & ignores SIGTERM.
         """
         if self._killed:
-            raise  KilledProcessError("Process {} has already been explicitly killed".format(self.name))
+            raise  KilledProcessError(f"Process {self.name} has already been explicitly killed")
         return await self._signal_and_wait(signal.SIGTERM)
 
     async def kill(self):
@@ -165,7 +165,7 @@ class SupervisedProcess:
         Send SIGKILL to process & reap it
         """
         if self._killed:
-            raise  KilledProcessError("Process {} has already been explicitly killed".format(self.name))
+            raise  KilledProcessError(f"Process {self.name} has already been explicitly killed")
         return await self._signal_and_wait(signal.SIGKILL)
 
 

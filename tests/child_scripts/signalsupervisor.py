@@ -16,7 +16,7 @@ async def main():
     count = int(sys.argv[1])
     pids = []
     for i in range(count):
-        proc = SupervisedProcess('signalprinter-{}'.format(i), *[
+        proc = SupervisedProcess(f'signalprinter-{i}', *[
             sys.executable,
             signal_printer, '1'
         ])

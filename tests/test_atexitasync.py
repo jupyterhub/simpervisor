@@ -29,7 +29,7 @@ def test_atexitasync(signum, handlercount):
     # Make sure the signal is handled by our handler in the code
     stdout, stderr = proc.communicate()
     expected_output = '\n'.join([
-        'handler {} received {}'.format(i, signum)
+        f'handler {i} received {signum}'
         for i in range(handlercount)
     ]) + '\n'
 
