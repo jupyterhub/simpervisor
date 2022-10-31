@@ -2,9 +2,7 @@
 Start a child process that prints signals it receives
 """
 import asyncio
-import signal
 import os
-from functools import partial
 import sys
 from simpervisor import SupervisedProcess
 

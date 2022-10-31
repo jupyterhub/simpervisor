@@ -1,8 +1,5 @@
-import asyncio
 import pytest
 import subprocess
-from textwrap import dedent
-from simpervisor import atexitasync 
 import sys
 import signal
 import os
