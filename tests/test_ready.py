@@ -1,6 +1,5 @@
 import sys
 import time
-import pytest
 import os
 from simpervisor import SupervisedProcess
 import aiohttp

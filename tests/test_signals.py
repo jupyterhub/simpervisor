@@ -2,7 +2,6 @@ import sys
 import signal
 import os
 import pytest
-from simpervisor import SupervisedProcess
 import subprocess
 import time
 import errno

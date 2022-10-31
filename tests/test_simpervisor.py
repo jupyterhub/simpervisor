@@ -5,7 +5,6 @@ import asyncio
 import errno
 import pytest
 import sys
-import logging
 
 import simpervisor
 
