@@ -15,10 +15,21 @@ class KilledProcessError(Exception):
 
     Each SupervisedProcess can be killed only once.
     """
+
     pass
 
+
 class SupervisedProcess:
-    def __init__(self, name, *args, always_restart=False, ready_func=None, ready_timeout=5, log=None,**kwargs):
+    def __init__(
+        self,
+        name,
+        *args,
+        always_restart=False,
+        ready_func=None,
+        ready_timeout=5,
+        log=None,
+        **kwargs,
+    ):
         self.always_restart = always_restart
         self.name = name
         self._proc_args = args
@@ -27,7 +38,7 @@ class SupervisedProcess:
         self.ready_timeout = ready_timeout
         self.proc = None
         if log is None:
-            self.log = logging.getLogger('simpervisor')
+            self.log = logging.getLogger("simpervisor")
         else:
             self.log = log
 
@@ -52,10 +63,10 @@ class SupervisedProcess:
         Makes structured logging easier
         """
         base_extras = {
-            'action': action,
-            'proccess-name': self.name,
-            'process-args': self._proc_args,
-            'process-kwargs': self._proc_kwargs
+            "action": action,
+            "proccess-name": self.name,
+            "process-args": self._proc_args,
+            "process-kwargs": self._proc_kwargs,
         }
         if extras:
             base_extras.update(extras)
@@ -69,7 +80,7 @@ class SupervisedProcess:
         self.proc.send_signal(signal)
         # Don't restart process after it is reaped
         self._killed = True
-        self._debug_log('signal', 'Propagated signal {} to {}', {}, signal, self.name)
+        self._debug_log("signal", "Propagated signal {} to {}", {}, signal, self.name)
 
     async def start(self):
         """
@@ -87,19 +98,23 @@ class SupervisedProcess:
                 # Don't wanna start it again, if we're already running
                 return
             if self._killed:
-                raise  KilledProcessError(f"Process {self.name} has already been explicitly killed")
-            self._debug_log('try-start', 'Trying to start {}', {}, self.name)
+                raise KilledProcessError(
+                    f"Process {self.name} has already been explicitly killed"
+                )
+            self._debug_log("try-start", "Trying to start {}", {}, self.name)
             self.proc = await asyncio.create_subprocess_exec(
                 *self._proc_args, **self._proc_kwargs
             )
-            self._debug_log('started', 'Started {}', {}, self.name)
+            self._debug_log("started", "Started {}", {}, self.name)
 
             self._killed = False
             self.running = True
 
             # Spin off a coroutine to watch, reap & restart process if needed
             # We don't wanna do this multiple times, so this is also inside the lock
-            self._restart_process_future = asyncio.ensure_future(self._restart_process_if_needed())
+            self._restart_process_future = asyncio.ensure_future(
+                self._restart_process_if_needed()
+            )
 
             # This handler is removed when process stops
             atexitasync.add_handler(self._handle_signal)
@@ -115,14 +130,11 @@ class SupervisedProcess:
         # FIXME: Do we need to aquire a lock somewhere in this method?
         atexitasync.remove_handler(self._handle_signal)
         self._debug_log(
-            'exited', '{} exited with code {}',
-            {'code': retcode},
-            self.name, retcode
+            "exited", "{} exited with code {}", {"code": retcode}, self.name, retcode
         )
         self.running = False
         if (not self._killed) and (self.always_restart or retcode != 0):
             await self.start()
-
 
     async def _signal_and_wait(self, signum):
         """
@@ -157,7 +169,9 @@ class SupervisedProcess:
         Might take a while if the process catches & ignores SIGTERM.
         """
         if self._killed:
-            raise  KilledProcessError(f"Process {self.name} has already been explicitly killed")
+            raise KilledProcessError(
+                f"Process {self.name} has already been explicitly killed"
+            )
         return await self._signal_and_wait(signal.SIGTERM)
 
     async def kill(self):
@@ -165,9 +179,10 @@ class SupervisedProcess:
         Send SIGKILL to process & reap it
         """
         if self._killed:
-            raise  KilledProcessError(f"Process {self.name} has already been explicitly killed")
+            raise KilledProcessError(
+                f"Process {self.name} has already been explicitly killed"
+            )
         return await self._signal_and_wait(signal.SIGKILL)
-
 
     async def ready(self):
         """
@@ -200,10 +215,12 @@ class SupervisedProcess:
                 is_ready = False
             cur_time = time.time() - start_time
             self._debug_log(
-                'ready-wait',
-                'Readyness: {} after {} seconds, next check in {}s',
-                {'wait_time': wait_time, 'ready': is_ready, 'elapsed_time': cur_time},
-                is_ready, cur_time, wait_time
+                "ready-wait",
+                "Readyness: {} after {} seconds, next check in {}s",
+                {"wait_time": wait_time, "ready": is_ready, "elapsed_time": cur_time},
+                is_ready,
+                cur_time,
+                wait_time,
             )
             if is_ready:
                 return True
@@ -219,7 +236,6 @@ class SupervisedProcess:
                 wait_time = (start_time + self.ready_timeout) - time.time() - 0.01
 
         return False
-
 
     # Pass through methods specific methods from proc
     # We don't pass through everything, just a subset we know is safe

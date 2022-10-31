@@ -12,14 +12,17 @@ import simpervisor
 SLEEP_TIME = 0.1
 SLEEP_WAIT_TIME = 0.5
 
+
 def sleep(retcode=0, time=SLEEP_TIME):
     """
     Sleep for {time} seconds & return code {retcode}
     """
     return [
         sys.executable,
-        '-c', f'import sys, time; time.sleep({time}); sys.exit({retcode})'
+        "-c",
+        f"import sys, time; time.sleep({time}); sys.exit({retcode})",
     ]
+
 
 async def test_start_success():
     """
@@ -32,6 +35,7 @@ async def test_start_success():
     assert proc.running
     await asyncio.sleep(SLEEP_WAIT_TIME)
     assert not proc.running
+
 
 async def test_start_always_restarting():
     """
@@ -51,6 +55,7 @@ async def test_start_always_restarting():
 
     await proc.terminate()
     assert not proc.running
+
 
 async def test_start_fail_restarting():
     """
@@ -90,7 +95,7 @@ async def test_start_multiple_start():
     assert not proc.running
 
 
-@pytest.mark.parametrize('method', ['start', 'kill', 'terminate'])
+@pytest.mark.parametrize("method", ["start", "kill", "terminate"])
 async def test_method_after_kill(method):
     """
     Running 'method' on process after it has been killed should throw

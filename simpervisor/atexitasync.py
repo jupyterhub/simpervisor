@@ -11,6 +11,7 @@ _handlers = []
 
 signal_handler_set = False
 
+
 def add_handler(handler):
     global signal_handler_set
     if not signal_handler_set:
@@ -20,8 +21,10 @@ def add_handler(handler):
         signal_handler_set = True
     _handlers.append(handler)
 
+
 def remove_handler(handler):
     _handlers.remove(handler)
+
 
 def _handle_signal(signum):
     for handler in _handlers:
