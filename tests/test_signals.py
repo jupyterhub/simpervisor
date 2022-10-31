@@ -1,10 +1,11 @@
-import sys
-import signal
-import os
-import pytest
-import subprocess
-import time
 import errno
+import os
+import signal
+import subprocess
+import sys
+import time
+
+import pytest
 
 
 @pytest.mark.parametrize('childcount', [1, 5])

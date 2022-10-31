@@ -1,9 +1,10 @@
 """
 Simple echo http server
 """
-import time
 import os
 import sys
+import time
+
 from aiohttp import web
 
 wait_time = float(sys.argv[1])

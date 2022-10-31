@@ -1,9 +1,10 @@
-import pytest
+import os
+import signal
 import subprocess
 import sys
-import signal
-import os
 import time
+
+import pytest
 
 
 @pytest.mark.parametrize('signum, handlercount', [

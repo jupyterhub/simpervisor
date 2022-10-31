@@ -3,8 +3,8 @@ asyncio aware version of atexit.
 
 Handles SIGINT and SIGTERM, unlike atexit
 """
-import signal
 import asyncio
+import signal
 import sys
 
 _handlers = []

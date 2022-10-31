@@ -1,10 +1,11 @@
+import asyncio
+import errno
 import inspect
 import os
 import signal
-import asyncio
-import errno
-import pytest
 import sys
+
+import pytest
 
 import simpervisor
 

@@ -1,11 +1,13 @@
 """
 Simple asynchronous process supervisor
 """
-import signal
 import asyncio
-import time
 import logging
+import signal
+import time
+
 from simpervisor import atexitasync
+
 
 class KilledProcessError(Exception):
     """

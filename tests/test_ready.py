@@ -1,9 +1,12 @@
+import logging
+import os
 import sys
 import time
-import os
-from simpervisor import SupervisedProcess
+
 import aiohttp
-import logging
+
+from simpervisor import SupervisedProcess
+
 
 async def test_ready():
     """
