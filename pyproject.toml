@@ -5,3 +5,26 @@
 [tool.pytest.ini_options]
 addopts = "--verbose --color=yes --durations=10"
 asyncio_mode = "auto"
+
+
+# black is used for autoformatting Python code
+#
+# ref: https://black.readthedocs.io/en/stable/
+#
+[tool.black]
+target_version = [
+    "py36",
+    "py37",
+    "py38",
+    "py39",
+    "py310",
+    "py311",
+]
+
+
+# isort is used for autoformatting Python code
+#
+# ref: https://pycqa.github.io/isort/
+#
+[tool.isort]
+profile = "black"
