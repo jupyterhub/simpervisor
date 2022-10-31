@@ -9,7 +9,6 @@ import errno
 
 
 @pytest.mark.parametrize('childcount', [1, 5])
-@pytest.mark.asyncio
 async def test_sigtermreap(childcount):
     """
     Test reaping subprocess after SIGTERM.

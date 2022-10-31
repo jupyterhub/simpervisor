@@ -1,4 +1,7 @@
+# pytest is used for running Python based tests
+#
+# ref: https://docs.pytest.org/en/stable/
+#
 [tool.pytest.ini_options]
-markers = [
-  "asyncio"
-]
+addopts = "--verbose --color=yes --durations=10"
+asyncio_mode = "auto"

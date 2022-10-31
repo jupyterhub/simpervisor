@@ -21,7 +21,6 @@ def sleep(retcode=0, time=SLEEP_TIME):
         '-c', 'import sys, time; time.sleep({}); sys.exit({})'.format(time, retcode)
     ]
 
-@pytest.mark.asyncio
 async def test_start_success():
     """
     Start a process & check its running status
@@ -34,7 +33,6 @@ async def test_start_success():
     await asyncio.sleep(SLEEP_WAIT_TIME)
     assert not proc.running
 
-@pytest.mark.asyncio
 async def test_start_always_restarting():
     """
     Start a process & check it restarts even when it succeeds
@@ -54,7 +52,6 @@ async def test_start_always_restarting():
     await proc.terminate()
     assert not proc.running
 
-@pytest.mark.asyncio
 async def test_start_fail_restarting():
     """
     Start a process that fails & make sure it restarts
@@ -75,7 +72,6 @@ async def test_start_fail_restarting():
     assert not proc.running
 
 
-@pytest.mark.asyncio
 async def test_start_multiple_start():
     """
     Starting the same process multiple times should be a noop
@@ -95,7 +91,6 @@ async def test_start_multiple_start():
 
 
 @pytest.mark.parametrize('method', ['start', 'kill', 'terminate'])
-@pytest.mark.asyncio
 async def test_method_after_kill(method):
     """
     Running 'method' on process after it has been killed should throw
@@ -112,7 +107,6 @@ async def test_method_after_kill(method):
         await getattr(proc, method)()
 
 
-@pytest.mark.asyncio
 async def test_kill():
     """
     Test killing processes
@@ -130,7 +124,6 @@ async def test_kill():
     assert e.value.errno == errno.ESRCH
 
 
-@pytest.mark.asyncio
 async def test_terminate():
     """
     Test terminating processes
