@@ -24,7 +24,9 @@ def test_atexitasync(signum, handlercount):
         os.path.dirname(os.path.abspath(__file__)), "child_scripts", "signalprinter.py"
     )
     proc = subprocess.Popen(
-        [sys.executable, signalprinter_file, str(handlercount)], stdout=subprocess.PIPE
+        [sys.executable, signalprinter_file, str(handlercount)],
+        stdout=subprocess.PIPE,
+        text=True,
     )
 
     # Give the process time to register signal handlers
@@ -38,7 +40,7 @@ def test_atexitasync(signum, handlercount):
         + "\n"
     )
 
-    assert stdout.decode() == expected_output
+    assert stdout == expected_output
 
     # The code should exit cleanly
     retcode = proc.wait()

@@ -24,14 +24,16 @@ async def test_sigtermreap(childcount):
     )
 
     proc = subprocess.Popen(
-        [sys.executable, signalsupervisor_file, str(childcount)], stdout=subprocess.PIPE
+        [sys.executable, signalsupervisor_file, str(childcount)],
+        stdout=subprocess.PIPE,
+        text=True,
     )
 
     # Give the signal handlers a bit of time to set up
     time.sleep(0.5)
 
     # Read the child's PID from signalsupervisor
-    child_pids = [int(l) for l in proc.stdout.readline().decode().split(" ")]
+    child_pids = [int(l) for l in proc.stdout.readline().split(" ")]
 
     proc.send_signal(signal.SIGTERM)
     proc.wait()
@@ -46,7 +48,7 @@ async def test_sigtermreap(childcount):
 
     # Test order of exit of child & parent
     assert (
-        stdout.decode()
+        stdout
         == "handler 0 received 15\n" * len(child_pids) + "supervisor exiting cleanly\n"
     )
     # Test that our supervisor also exited cleanly
