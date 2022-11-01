@@ -1,13 +1,14 @@
-import sys
-import signal
-import os
-import pytest
-import subprocess
-import time
 import errno
+import os
+import signal
+import subprocess
+import sys
+import time
+
+import pytest
 
 
-@pytest.mark.parametrize('childcount', [1, 5])
+@pytest.mark.parametrize("childcount", [1, 5])
 async def test_sigtermreap(childcount):
     """
     Test reaping subprocess after SIGTERM.
@@ -18,17 +19,19 @@ async def test_sigtermreap(childcount):
     """
     signalsupervisor_file = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
-        'child_scripts',
-        'signalsupervisor.py'
+        "child_scripts",
+        "signalsupervisor.py",
     )
 
-    proc = subprocess.Popen([sys.executable, signalsupervisor_file, str(childcount)], stdout=subprocess.PIPE)
-    
+    proc = subprocess.Popen(
+        [sys.executable, signalsupervisor_file, str(childcount)], stdout=subprocess.PIPE
+    )
+
     # Give the signal handlers a bit of time to set up
     time.sleep(0.5)
 
     # Read the child's PID from signalsupervisor
-    child_pids = [int(l) for l in proc.stdout.readline().decode().split(' ')]
+    child_pids = [int(l) for l in proc.stdout.readline().decode().split(" ")]
 
     proc.send_signal(signal.SIGTERM)
     proc.wait()
@@ -42,6 +45,9 @@ async def test_sigtermreap(childcount):
         assert e.value.errno == errno.ESRCH
 
     # Test order of exit of child & parent
-    assert stdout.decode() == 'handler 0 received 15\n' * len(child_pids) + 'supervisor exiting cleanly\n'
+    assert (
+        stdout.decode()
+        == "handler 0 received 15\n" * len(child_pids) + "supervisor exiting cleanly\n"
+    )
     # Test that our supervisor also exited cleanly
     assert proc.returncode == 0

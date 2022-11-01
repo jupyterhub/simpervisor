@@ -2,13 +2,16 @@
 Print received SIGTERM & SIGINT signals
 """
 import asyncio
-from functools import partial
 import sys
+from functools import partial
+
 from simpervisor import atexitasync
+
 
 def _handle_sigterm(number, received_signum):
     # Print the received signum so we know our handler was called
-    print("handler {} received".format(number), int(received_signum), flush=True)
+    print(f"handler {number} received", int(received_signum), flush=True)
+
 
 handlercount = int(sys.argv[1])
 for i in range(handlercount):

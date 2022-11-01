@@ -1,25 +1,31 @@
-import pytest
+import os
+import signal
 import subprocess
 import sys
-import signal
-import os
 import time
 
+import pytest
 
-@pytest.mark.parametrize('signum, handlercount', [
-    (signal.SIGTERM, 1), (signal.SIGINT, 1),
-    (signal.SIGTERM, 5), (signal.SIGINT, 5),
-])
+
+@pytest.mark.parametrize(
+    "signum, handlercount",
+    [
+        (signal.SIGTERM, 1),
+        (signal.SIGINT, 1),
+        (signal.SIGTERM, 5),
+        (signal.SIGINT, 5),
+    ],
+)
 def test_atexitasync(signum, handlercount):
     """
     Test signal handlers receive signals properly
     """
     signalprinter_file = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        'child_scripts',
-        'signalprinter.py'
+        os.path.dirname(os.path.abspath(__file__)), "child_scripts", "signalprinter.py"
     )
-    proc = subprocess.Popen([sys.executable, signalprinter_file, str(handlercount)], stdout=subprocess.PIPE)
+    proc = subprocess.Popen(
+        [sys.executable, signalprinter_file, str(handlercount)], stdout=subprocess.PIPE
+    )
 
     # Give the process time to register signal handlers
     time.sleep(0.5)
@@ -27,10 +33,10 @@ def test_atexitasync(signum, handlercount):
 
     # Make sure the signal is handled by our handler in the code
     stdout, stderr = proc.communicate()
-    expected_output = '\n'.join([
-        'handler {} received {}'.format(i, signum)
-        for i in range(handlercount)
-    ]) + '\n'
+    expected_output = (
+        "\n".join([f"handler {i} received {signum}" for i in range(handlercount)])
+        + "\n"
+    )
 
     assert stdout.decode() == expected_output
 
