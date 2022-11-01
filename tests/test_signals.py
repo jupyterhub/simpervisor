@@ -30,7 +30,7 @@ async def test_sigtermreap(childcount):
     )
 
     # Give the signal handlers a bit of time to set up
-    time.sleep(0.5)
+    time.sleep(1)
 
     # Read the child's PID from signalsupervisor
     child_pids = [int(l) for l in proc.stdout.readline().split(" ")]

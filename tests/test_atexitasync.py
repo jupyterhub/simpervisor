@@ -30,7 +30,7 @@ def test_atexitasync(signum, handlercount):
     )
 
     # Give the process time to register signal handlers
-    time.sleep(0.5)
+    time.sleep(1)
     proc.send_signal(signum)
 
     # Make sure the signal is handled by our handler in the code
