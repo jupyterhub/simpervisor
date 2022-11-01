@@ -8,4 +8,8 @@
 [![Discourse](https://img.shields.io/badge/help_forum-discourse-blue?logo=discourse)](https://discourse.jupyter.org/c/jupyterhub)
 [![Gitter](https://img.shields.io/badge/social_chat-gitter-blue?logo=gitter)](https://gitter.im/jupyterhub/jupyterhub)
 
-Simple Python3 Supervisor library
+simpervisor provides the SupervisedProcess class that provides async methods
+`start`, `ready`, `terminate`, and `kill` to manage it. As an example of how it
+can be used, see [how jupyterhub/jupyter-server-proxy uses it][].
+
+[how jupyterhub/jupyter-server-proxy uses it]: https://github.com/jupyterhub/jupyter-server-proxy/blob/969850eb0be2f8d016974104497109e0d13ddc94/jupyter_server_proxy/handlers.py#L650-L660
