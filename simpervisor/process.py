@@ -76,7 +76,7 @@ class SupervisedProcess:
     def _handle_signal(self, signal):
         # Child processes should handle SIGTERM / SIGINT & close,
         # which should trigger self._restart_process_if_needed
-        # We don't explicitly reap child processe
+        # We don't explicitly reap child processes
         self.proc.send_signal(signal)
         # Don't restart process after it is reaped
         self._killed = True
