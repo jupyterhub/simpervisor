@@ -25,17 +25,24 @@ on:
 
 jobs:
   pytest:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-${{ matrix.ubuntu-version }}
     strategy:
       fail-fast: false
       matrix:
         include:
+          # Python 3.6 is only available in the ubuntu-22.04 runner
           - python-version: "3.6"
+            ubuntu-version: "20.04"
           - python-version: "3.7"
+            ubuntu-version: "22.04"
           - python-version: "3.8"
+            ubuntu-version: "22.04"
           - python-version: "3.9"
+            ubuntu-version: "22.04"
           - python-version: "3.10"
+            ubuntu-version: "22.04"
           - python-version: "3.11"
+            ubuntu-version: "22.04"
 
     steps:
       - uses: actions/checkout@v3
@@ -54,4 +61,3 @@ jobs:
 
       # GitHub action reference: https://github.com/codecov/codecov-action
       - uses: codecov/codecov-action@v3
-        if: github.ref == 'refs/heads/main'
