@@ -32,11 +32,7 @@ try:
     loop.run_forever()
 finally:
     # Cleanup properly so we get a clean exit
-    try:
-        remaining_tasks = asyncio.all_tasks(loop=loop)
-    except AttributeError:
-        # asyncio.all_tasks was added in 3. Provides reverse compatability.
-        remaining_tasks = asyncio.Task.all_tasks(loop=loop)
+    remaining_tasks = asyncio.all_tasks(loop=loop)
     loop.run_until_complete(asyncio.gather(*remaining_tasks))
     loop.close()
     print("supervisor exiting cleanly")

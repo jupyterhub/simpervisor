@@ -20,7 +20,7 @@ path = "simpervisor/_version.py"
 name = "simpervisor"
 description = "Simple async process supervisor"
 readme = "README.md"
-requires-python = ">=3.6"
+requires-python = ">=3.7"
 license = {file = "LICENSE"}
 keywords = ["async", "process", "supervisor"]
 authors = [
@@ -29,7 +29,6 @@ authors = [
 classifiers = [
     "Development Status :: 4 - Beta",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
@@ -70,7 +69,6 @@ asyncio_mode = "auto"
 #
 [tool.black]
 target_version = [
-    "py36",
     "py37",
     "py38",
     "py39",
