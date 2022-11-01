@@ -30,7 +30,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - python-version: "3.6"
           - python-version: "3.7"
           - python-version: "3.8"
           - python-version: "3.9"
@@ -43,15 +42,9 @@ jobs:
         with:
           python-version: "${{ matrix.python-version }}"
 
-      - name: Install
-        run: |
-          pip install -r dev-requirements.txt
-          pip install -e .
+      - run: pip install ".[test]"
 
-      - name: Test
-        run: |
-          pytest --maxfail=3 --log-cli-level=DEBUG --cov=simpervisor tests/
+      - run: pytest --cov=simpervisor
 
       # GitHub action reference: https://github.com/codecov/codecov-action
       - uses: codecov/codecov-action@v3
-        if: github.ref == 'refs/heads/main'

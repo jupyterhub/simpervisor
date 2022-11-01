@@ -5,7 +5,7 @@ import asyncio
 import sys
 from functools import partial
 
-from simpervisor import atexitasync
+from simpervisor.atexitasync import add_handler
 
 
 def _handle_sigterm(number, received_signum):
@@ -15,7 +15,7 @@ def _handle_sigterm(number, received_signum):
 
 handlercount = int(sys.argv[1])
 for i in range(handlercount):
-    atexitasync.add_handler(partial(_handle_sigterm, i))
+    add_handler(partial(_handle_sigterm, i))
 
 loop = asyncio.get_event_loop()
 try:

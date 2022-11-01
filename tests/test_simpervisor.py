@@ -7,7 +7,7 @@ import sys
 
 import pytest
 
-import simpervisor
+from simpervisor import KilledProcessError, SupervisedProcess
 
 SLEEP_TIME = 0.1
 SLEEP_WAIT_TIME = 0.5
@@ -28,7 +28,7 @@ async def test_start_success():
     """
     Start a process & check its running status
     """
-    proc = simpervisor.SupervisedProcess(
+    proc = SupervisedProcess(
         inspect.currentframe().f_code.co_name, *sleep(0), always_restart=False
     )
     await proc.start()
@@ -41,7 +41,7 @@ async def test_start_always_restarting():
     """
     Start a process & check it restarts even when it succeeds
     """
-    proc = simpervisor.SupervisedProcess(
+    proc = SupervisedProcess(
         inspect.currentframe().f_code.co_name, *sleep(0), always_restart=True
     )
     await proc.start()
@@ -61,7 +61,7 @@ async def test_start_fail_restarting():
     """
     Start a process that fails & make sure it restarts
     """
-    proc = simpervisor.SupervisedProcess(
+    proc = SupervisedProcess(
         inspect.currentframe().f_code.co_name, *sleep(1), always_restart=True
     )
     await proc.start()
@@ -81,7 +81,7 @@ async def test_start_multiple_start():
     """
     Starting the same process multiple times should be a noop
     """
-    proc = simpervisor.SupervisedProcess(
+    proc = SupervisedProcess(
         inspect.currentframe().f_code.co_name, *sleep(0), always_restart=True
     )
     await proc.start()
@@ -100,7 +100,7 @@ async def test_method_after_kill(method):
     """
     Running 'method' on process after it has been killed should throw
     """
-    proc = simpervisor.SupervisedProcess(
+    proc = SupervisedProcess(
         inspect.currentframe().f_code.co_name, *sleep(0), always_restart=True
     )
     await proc.start()
@@ -108,7 +108,7 @@ async def test_method_after_kill(method):
     await proc.kill()
     assert not proc.running
 
-    with pytest.raises(simpervisor.KilledProcessError):
+    with pytest.raises(KilledProcessError):
         await getattr(proc, method)()
 
 
@@ -116,7 +116,7 @@ async def test_kill():
     """
     Test killing processes
     """
-    proc = simpervisor.SupervisedProcess(
+    proc = SupervisedProcess(
         inspect.currentframe().f_code.co_name, *sleep(0), always_restart=True
     )
 
@@ -133,7 +133,7 @@ async def test_terminate():
     """
     Test terminating processes
     """
-    proc = simpervisor.SupervisedProcess(
+    proc = SupervisedProcess(
         inspect.currentframe().f_code.co_name, *sleep(0), always_restart=True
     )
 
