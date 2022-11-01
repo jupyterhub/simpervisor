@@ -6,7 +6,7 @@ import logging
 import signal
 import time
 
-from simpervisor import atexitasync
+from .atexitasync import add_handler, remove_handler
 
 
 class KilledProcessError(Exception):
@@ -117,7 +117,7 @@ class SupervisedProcess:
             )
 
             # This handler is removed when process stops
-            atexitasync.add_handler(self._handle_signal)
+            add_handler(self._handle_signal)
 
     async def _restart_process_if_needed(self):
         """
@@ -128,7 +128,7 @@ class SupervisedProcess:
         """
         retcode = await self.proc.wait()
         # FIXME: Do we need to aquire a lock somewhere in this method?
-        atexitasync.remove_handler(self._handle_signal)
+        remove_handler(self._handle_signal)
         self._debug_log(
             "exited", "{} exited with code {}", {"code": retcode}, self.name, retcode
         )
@@ -160,7 +160,7 @@ class SupervisedProcess:
             await self.proc.wait()
             self.running = False
             # Remove signal handler *after* the process is done
-            atexitasync.remove_handler(self._handle_signal)
+            remove_handler(self._handle_signal)
 
     async def terminate(self):
         """
