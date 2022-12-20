@@ -58,3 +58,7 @@ repos:
           - --ignore=E,C,W
           - --builtins=c
           - --exclude=__init__.py
+
+# pre-commit.ci config reference: https://pre-commit.ci/#configuration
+ci:
+  autoupdate_schedule: monthly
