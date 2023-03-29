@@ -3,7 +3,6 @@ asyncio aware version of atexit.
 
 Handles SIGINT and SIGTERM, unlike atexit
 """
-import asyncio
 import signal
 import sys
 
@@ -15,9 +14,8 @@ signal_handler_set = False
 def add_handler(handler):
     global signal_handler_set
     if not signal_handler_set:
-        loop = asyncio.get_event_loop()
-        loop.add_signal_handler(signal.SIGINT, _handle_signal, signal.SIGINT)
-        loop.add_signal_handler(signal.SIGTERM, _handle_signal, signal.SIGTERM)
+        signal.signal(signal.SIGINT, _handle_signal)
+        signal.signal(signal.SIGTERM, _handle_signal)
         signal_handler_set = True
     _handlers.append(handler)
 
@@ -26,7 +24,11 @@ def remove_handler(handler):
     _handlers.remove(handler)
 
 
-def _handle_signal(signum):
+def _handle_signal(signum, *args):
+    # Windows doesn't support SIGINT. Replacing it with CTRL_C_EVENT so that it
+    # can used with subprocess.Popen.send_signal
+    if signum == signal.SIGINT and sys.platform == "win32":
+        signum = signal.CTRL_C_EVENT
     for handler in _handlers:
         handler(signum)
     sys.exit(0)

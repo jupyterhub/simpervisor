@@ -4,6 +4,8 @@ Simple asynchronous process supervisor
 import asyncio
 import logging
 import signal
+import subprocess
+import sys
 import time
 
 from .atexitasync import add_handler, remove_handler
@@ -102,9 +104,7 @@ class SupervisedProcess:
                     f"Process {self.name} has already been explicitly killed"
                 )
             self._debug_log("try-start", "Trying to start {}", {}, self.name)
-            self.proc = await asyncio.create_subprocess_exec(
-                *self._proc_args, **self._proc_kwargs
-            )
+            self.proc = subprocess.Popen(list(self._proc_args), **self._proc_kwargs)
             self._debug_log("started", "Started {}", {}, self.name)
 
             self._killed = False
@@ -126,7 +126,12 @@ class SupervisedProcess:
         This is a long running task that keeps running until the process
         exits. If we restart the process, `start()` sets this up again.
         """
-        retcode = await self.proc.wait()
+        # Since self.proc is a subprocess.Popen object, wait() method is a blocking
+        # call. To prevent the entire program being stuck at this point, we use
+        # the poll() method to check whether the child process is alive or not.
+        while self.proc.poll() is None:
+            await asyncio.sleep(0.1)
+        retcode = self.proc.wait()
         # FIXME: Do we need to aquire a lock somewhere in this method?
         remove_handler(self._handle_signal)
         self._debug_log(
@@ -157,7 +162,7 @@ class SupervisedProcess:
             # We cancel the restart watcher & wait for the process to finish,
             # since we return only after the process has been reaped
             self._restart_process_future.cancel()
-            await self.proc.wait()
+            self.proc.wait()
             self.running = False
             # Remove signal handler *after* the process is done
             remove_handler(self._handle_signal)
@@ -182,7 +187,14 @@ class SupervisedProcess:
             raise KilledProcessError(
                 f"Process {self.name} has already been explicitly killed"
             )
-        return await self._signal_and_wait(signal.SIGKILL)
+        # Windows doesn't support SIGKILL. subprocess.Popen.kill() is an alias of
+        # subprocess.Popen.terminate(), so we can use SIGTERM instead of SIGKILL
+        # on windows platform.
+        if sys.platform == "win32":
+            signum = signal.SIGTERM
+        else:
+            signum = signal.SIGKILL
+        return await self._signal_and_wait(signum)
 
     async def ready(self):
         """
@@ -210,7 +222,9 @@ class SupervisedProcess:
             # FIXME: We should probably check again if our process is still running
             # FIXME: Should we be locking something here?
             try:
-                is_ready = await asyncio.wait_for(self.ready_func(self), 1)
+                # Timeout of 5 secs is needed as DNS resolution of localhost
+                # on Windows takes significant time.
+                is_ready = await asyncio.wait_for(self.ready_func(self), 5)
             except asyncio.TimeoutError:
                 is_ready = False
             cur_time = time.time() - start_time

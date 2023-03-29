@@ -48,6 +48,7 @@ Source = "https://github.com/jupyterhub/simpervisor"
 [project.optional-dependencies]
 test = [
     "aiohttp",
+    "psutil",
     "pytest",
     "pytest-asyncio",
     "pytest-cov",

@@ -9,6 +9,10 @@ import pytest
 
 
 @pytest.mark.parametrize("childcount", [1, 5])
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Testing signals on Windows doesn't seem to be possible",
+)
 async def test_sigtermreap(childcount):
     """
     Test reaping subprocess after SIGTERM.

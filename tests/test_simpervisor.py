@@ -1,16 +1,19 @@
 import asyncio
-import errno
 import inspect
-import os
 import signal
 import sys
 
+import psutil
 import pytest
 
 from simpervisor import KilledProcessError, SupervisedProcess
 
 SLEEP_TIME = 0.1
-SLEEP_WAIT_TIME = 0.5
+
+# On Windows, for test_start_success testpoint, the process exit is taking more
+# than 0.5 seconds and sometimes it goes upto 1 second. Hence, to be on safe side
+# setting the wait timeout value to be 2 seconds.
+SLEEP_WAIT_TIME = 2
 
 
 def sleep(retcode=0, time=SLEEP_TIME):
@@ -122,11 +125,10 @@ async def test_kill():
 
     await proc.start()
     await proc.kill()
-    assert proc.returncode == -signal.SIGKILL
+    exitcode = 1 if sys.platform == "win32" else -signal.SIGKILL
+    assert proc.returncode == exitcode
     assert not proc.running
-    with pytest.raises(OSError) as e:
-        os.kill(proc.pid, 0)
-    assert e.value.errno == errno.ESRCH
+    assert not psutil.pid_exists(proc.pid)
 
 
 async def test_terminate():
@@ -139,8 +141,7 @@ async def test_terminate():
 
     await proc.start()
     await proc.terminate()
-    assert proc.returncode == -signal.SIGTERM
+    exitcode = 1 if sys.platform == "win32" else -signal.SIGTERM
+    assert proc.returncode == exitcode
     assert not proc.running
-    with pytest.raises(OSError) as e:
-        os.kill(proc.pid, 0)
-    assert e.value.errno == errno.ESRCH
+    assert not psutil.pid_exists(proc.pid)
