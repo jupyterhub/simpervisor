@@ -11,9 +11,9 @@ from simpervisor import KilledProcessError, SupervisedProcess
 SLEEP_TIME = 0.1
 
 # On Windows, for test_start_success testpoint, the process exit is taking more
-# than 0.5 seconds and sometimes it goes upto 1 second. Hence, to be on safe side
-# setting the wait timeout value to be 2 seconds.
-SLEEP_WAIT_TIME = 2
+# than 0.5 seconds. Hence, to be on safe side setting the wait timeout value to
+# be 5 seconds.
+SLEEP_WAIT_TIME = 5
 
 
 def sleep(retcode=0, time=SLEEP_TIME):
