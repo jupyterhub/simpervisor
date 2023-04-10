@@ -18,6 +18,14 @@ repos:
           - --py38-plus
 
   # Autoformat: Python code
+  - repo: https://github.com/PyCQA/autoflake
+    rev: v2.0.2
+    hooks:
+      - id: autoflake
+        args:
+          - --in-place
+
+  # Autoformat: Python code
   - repo: https://github.com/pycqa/isort
     rev: 5.12.0
     hooks:
