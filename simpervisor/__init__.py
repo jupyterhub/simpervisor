@@ -1,2 +1,2 @@
-from ._version import __version__
-from .process import KilledProcessError, SupervisedProcess
+from ._version import __version__  # noqa
+from .process import KilledProcessError, SupervisedProcess  # noqa
