@@ -15,7 +15,15 @@ repos:
     hooks:
       - id: pyupgrade
         args:
-          - --py37-plus
+          - --py38-plus
+
+  # Autoformat: Python code
+  - repo: https://github.com/PyCQA/autoflake
+    rev: v2.0.2
+    hooks:
+      - id: autoflake
+        args:
+          - --in-place
 
   # Autoformat: Python code
   - repo: https://github.com/pycqa/isort
@@ -49,15 +57,6 @@ repos:
     rev: "6.0.0"
     hooks:
       - id: flake8
-        # Ignore style and complexity
-        # E: style errors
-        # W: style warnings
-        # C: complexity
-        #
-        args:
-          - --ignore=E,C,W
-          - --builtins=c
-          - --exclude=__init__.py
 
 # pre-commit.ci config reference: https://pre-commit.ci/#configuration
 ci:
