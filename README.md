@@ -1,6 +1,6 @@
 # simpervisor
 
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/jupyterhub/simpervisor/Test?logo=github)](https://github.com/jupyterhub/simpervisor/actions)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/jupyterhub/simpervisor/test.yaml?branch=main&logo=github&label=tests)](https://github.com/jupyterhub/simpervisor/actions)
 [![Codecov](https://img.shields.io/codecov/c/github/jupyterhub/simpervisor?logo=codecov&logoColor=white)](https://codecov.io/gh/jupyterhub/simpervisor)
 [![Latest PyPI version](https://img.shields.io/pypi/v/simpervisor?logo=pypi)](https://pypi.python.org/pypi/simpervisor)
 [![Latest conda-forge version](https://img.shields.io/conda/vn/conda-forge/simpervisor?logo=conda-forge)](https://anaconda.org/conda-forge/simpervisor)
