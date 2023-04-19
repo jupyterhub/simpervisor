@@ -18,8 +18,6 @@ class KilledProcessError(Exception):
     Each SupervisedProcess can be killed only once.
     """
 
-    pass
-
 
 class SupervisedProcess:
     def __init__(
