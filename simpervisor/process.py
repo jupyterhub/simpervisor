@@ -160,6 +160,8 @@ class SupervisedProcess:
             # We cancel the restart watcher & wait for the process to finish,
             # since we return only after the process has been reaped
             self._restart_process_future.cancel()
+            while self.proc.poll() is None:
+                await asyncio.sleep(0.1)
             self.proc.wait()
             self.running = False
             # Remove signal handler *after* the process is done
