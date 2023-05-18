@@ -4,6 +4,8 @@ Simple asynchronous process supervisor
 import asyncio
 import logging
 import signal
+import subprocess
+import sys
 import time
 
 from .atexitasync import add_handler, remove_handler
@@ -15,6 +17,121 @@ class KilledProcessError(Exception):
 
     Each SupervisedProcess can be killed only once.
     """
+
+
+class Process:
+    """
+    Abstract class to start, wait and send signals to running processes in a OS agnostic way
+    """
+
+    # Protected data members only accessible by derived classes.
+    _proc_cmd = None
+    _proc_kwargs = None
+    _proc = None
+
+    def __init__(self, *cmd, **kwargs):
+        self._proc_cmd = cmd
+        self._proc_kwargs = kwargs
+
+    async def start(self):
+        """
+        Start the process
+        """
+        raise NotImplementedError
+
+    async def wait(self):
+        """
+        Wait for the process to terminate and return the process exit code.
+        """
+        raise NotImplementedError
+
+    def get_kill_signal(self):
+        """
+        Returns the preferred OS signal to kill the process.
+        """
+        raise NotImplementedError
+
+    def send_signal(self, signum):
+        """
+        Send the OS signal to the process.
+        """
+        if self._proc:
+            self._proc.send_signal(signum)
+
+    @property
+    def pid(self):
+        if self._proc:
+            return self._proc.pid
+
+    @property
+    def returncode(self):
+        if self._proc:
+            return self._proc.returncode
+
+
+class POSIXProcess(Process):
+    """
+    A process that uses asyncio-subprocess API to start and wait.
+    """
+
+    async def start(self):
+        """
+        Start the process using asyncio.create_subprocess_exec API
+        """
+        self._proc = await asyncio.create_subprocess_exec(
+            *self._proc_cmd, **self._proc_kwargs
+        )
+
+    async def wait(self):
+        """
+        Wait for the process to stop and return the process exit code.
+        """
+        return await self._proc.wait()
+
+    def get_kill_signal(self):
+        """
+        Returns the OS signal used for kill the child process.
+        """
+        return signal.SIGKILL
+
+
+class WindowsProcess(Process):
+    """
+    A process that uses subprocess API to start and wait (uses busy polling).
+    """
+
+    async def start(self):
+        """
+        Starts the process using subprocess.Popen API
+        """
+        self._proc = subprocess.Popen(list(self._proc_cmd), **self._proc_kwargs)
+
+    async def wait(self):
+        """
+        Wait for the process to stop and return the process exit code.
+
+        subprocess.Popen.wait() is a blocking call which can cause the asyncio
+        event loop to remain blocked until the child process is terminated.
+
+        To circumvent this behavior, we use busy polling with asyncio.sleep to check
+        whether the child process is alive or not and keeping the asyncio event
+        loop running.
+
+        See https://github.com/jupyter/jupyter_client/blob/main/jupyter_client/provisioning/local_provisioner.py#L54_L55 for similar use.
+        """
+        while self._proc.poll() is None:
+            await asyncio.sleep(0.5)
+        return self._proc.wait()
+
+    def get_kill_signal(self):
+        """
+        Returns the OS signal used for kill the child process.
+
+        Windows doesn't support SIGKILL. subprocess.Popen.kill() is an alias of
+        subprocess.Popen.terminate(), so we can use SIGTERM instead of SIGKILL
+        on windows platform.
+        """
+        return signal.SIGTERM
 
 
 class SupervisedProcess:
@@ -100,9 +217,15 @@ class SupervisedProcess:
                     f"Process {self.name} has already been explicitly killed"
                 )
             self._debug_log("try-start", "Trying to start {}", {}, self.name)
-            self.proc = await asyncio.create_subprocess_exec(
-                *self._proc_args, **self._proc_kwargs
-            )
+
+            # Child process is created based on platform
+            if sys.platform == "win32":
+                self.proc = WindowsProcess(*self._proc_args, **self._proc_kwargs)
+            else:
+                self.proc = POSIXProcess(*self._proc_args, **self._proc_kwargs)
+
+            # Start the child process
+            await self.proc.start()
             self._debug_log("started", "Started {}", {}, self.name)
 
             self._killed = False
@@ -180,7 +303,8 @@ class SupervisedProcess:
             raise KilledProcessError(
                 f"Process {self.name} has already been explicitly killed"
             )
-        return await self._signal_and_wait(signal.SIGKILL)
+        signum = self.proc.get_kill_signal()
+        return await self._signal_and_wait(signum)
 
     async def ready(self):
         """
@@ -208,7 +332,9 @@ class SupervisedProcess:
             # FIXME: We should probably check again if our process is still running
             # FIXME: Should we be locking something here?
             try:
-                is_ready = await asyncio.wait_for(self.ready_func(self), 1)
+                # Timeout of 5 secs is needed as DNS resolution of localhost
+                # on Windows takes significant time.
+                is_ready = await asyncio.wait_for(self.ready_func(self), 5)
             except asyncio.TimeoutError:
                 is_ready = False
             cur_time = time.time() - start_time

@@ -16,6 +16,10 @@ import pytest
         (signal.SIGINT, 5),
     ],
 )
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Testing signals on Windows doesn't seem to be possible",
+)
 def test_atexitasync(signum, handlercount):
     """
     Test signal handlers receive signals properly

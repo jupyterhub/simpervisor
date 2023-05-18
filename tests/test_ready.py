@@ -33,13 +33,19 @@ async def test_ready():
                 logging.debug("Connection to {} refused", url)
                 return False
 
+    # If env variable is specified to SupervisedProcess, then it needs to be a
+    # copy of OS environment as interpreter related required information is
+    # stored on Windows.
+    env = os.environ.copy()
+    env.update({"PORT": port})
+
     proc = SupervisedProcess(
         "socketserver",
         sys.executable,
         httpserver_file,
         str(ready_time),
         ready_func=_ready_func,
-        env={"PORT": port},
+        env=env,
     )
 
     try:
