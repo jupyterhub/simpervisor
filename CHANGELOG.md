@@ -2,7 +2,7 @@
 
 ## 1.0
 
-### 1.0.0
+### 1.0.0 - 2023-05-18
 
 With this release Python >=3.8 is required and Windows is supported.
 
