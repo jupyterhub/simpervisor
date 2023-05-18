@@ -120,7 +120,7 @@ class WindowsProcess(Process):
         See https://github.com/jupyter/jupyter_client/blob/main/jupyter_client/provisioning/local_provisioner.py#L54_L55 for similar use.
         """
         while self._proc.poll() is None:
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.5)
         return self._proc.wait()
 
     def get_kill_signal(self):
