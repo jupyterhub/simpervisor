@@ -4,7 +4,7 @@
 
 ### 1.0.0
 
-([full changelog](https://github.com/jupyterhub/simpervisor/compare/v0.4...v1.0.0))
+With this release Python >=3.8 is required and Windows is supported.
 
 #### New features added
 
