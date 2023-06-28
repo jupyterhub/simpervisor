@@ -17,7 +17,7 @@ def add_handler(handler):
     if not signal_handler_set:
         # Add handler of SIGINT only if it is not default
         _existing_sigint_handler = signal.getsignal(signal.SIGINT)
-        if _existing_sigint_handler.__qualname__ == 'default_int_handler':
+        if _existing_sigint_handler.__qualname__ == "default_int_handler":
             _existing_sigint_handler = None
         _existing_handlers.update(
             {
