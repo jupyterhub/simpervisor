@@ -11,7 +11,7 @@ wait_time = float(sys.argv[1])
 print("waiting", wait_time)
 time.sleep(wait_time)
 
-PORT = os.environ["PORT"]
+PORT = int(os.environ["PORT"])
 
 routes = web.RouteTableDef()
 
