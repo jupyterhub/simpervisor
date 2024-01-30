@@ -39,7 +39,6 @@ def add_handler(handler):
         signal.signal(signal.SIGTERM, _handle_signal)
         signal_handler_set = True
     _handlers.append(handler)
-    # print(_existing_handlers)
 
 
 def remove_handler(handler):
