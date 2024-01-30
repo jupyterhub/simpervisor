@@ -35,6 +35,12 @@ def _ensure_signal_handlers_set():
     global signal_handler_set
     if not signal_handler_set:
         # save previously registered non-default Python callable signal handlers
+        #
+        # windows note: signal.getsignal(signal.CTRL_C_EVENT) would error with
+        # "ValueError: signal number out of range", and
+        # signal.signal(signal.CTRL_C_EVENT, _handle_signal) would error with
+        # "ValueError: invalid signal value".
+        #
         prev_sigint = signal.getsignal(signal.SIGINT)
         prev_sigterm = signal.getsignal(signal.SIGTERM)
         if callable(prev_sigint) and prev_sigint.__qualname__ != "default_int_handler":
@@ -53,6 +59,8 @@ def _handle_signal(signum, *args):
     Calls functions added by add_handler, and then calls the previously
     registered non-default Python callable signal handler if there were one.
     """
+    prev_handler = _prev_handlers.get(signum)
+
     # Windows doesn't support SIGINT. Replacing it with CTRL_C_EVENT so that it
     # can used with subprocess.Popen.send_signal
     if signum == signal.SIGINT and sys.platform == "win32":
@@ -62,9 +70,6 @@ def _handle_signal(signum, *args):
         handler(signum)
 
     # call previously registered non-default Python callable handler or exit
-    # FIXME: This is currently incorrectly implemented for windows as there are
-    #        no _prev_handlers entry for signal.CTRL_C_EVENT!
-    prev_handler = _prev_handlers.get(signum)
     if prev_handler:
         prev_handler(signum, None)
     else:
