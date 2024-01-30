@@ -46,7 +46,7 @@ def _ensure_signal_handlers_set():
         if callable(prev_sigint) and prev_sigint.__qualname__ != "default_int_handler":
             _prev_handlers[signal.SIGINT] = prev_sigint
         if callable(prev_sigterm) and prev_sigterm != signal.Handlers.SIG_DFL:
-            _prev_handlers[signal.SIGTERM] = prev_sigint
+            _prev_handlers[signal.SIGTERM] = prev_sigterm
 
         # let _handle_signal handle SIGINT and SIGTERM
         signal.signal(signal.SIGINT, _handle_signal)
