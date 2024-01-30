@@ -71,6 +71,6 @@ def _handle_signal(signum, *args):
 
     # call previously registered non-default Python callable handler or exit
     if prev_handler:
-        prev_handler(signum, None)
+        prev_handler(signum, *args)
     else:
         sys.exit(0)
