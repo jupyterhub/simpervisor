@@ -2,8 +2,8 @@
 Print received SIGTERM & SIGINT signals
 """
 import asyncio
-import sys
 import signal
+import sys
 from functools import partial
 
 from simpervisor.atexitasync import add_handler
