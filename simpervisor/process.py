@@ -273,13 +273,22 @@ class SupervisedProcess:
             # Don't yield control between sending signal & calling wait
             # This way, we don't end up in a call to _restart_process_if_needed
             # and possibly restarting. We also set _killed, just to be sure.
-            self.proc.send_signal(signum)
+            process_exists = True
+            try:
+                self.proc.send_signal(signum)
+            except ProcessLookupError:
+                # The child has already exited and asyncio's subprocess
+                # transport has reaped it, so the OS has no record of the
+                # pid. Treat this as an already-dead success.
+                process_exists = False
             self._killed = True
 
             # We cancel the restart watcher & wait for the process to finish,
-            # since we return only after the process has been reaped
+            # since we return only after the process has been reaped (when
+            # it still existed).
             self._restart_process_future.cancel()
-            await self.proc.wait()
+            if process_exists:
+                await self.proc.wait()
             self.running = False
             # Remove signal handler *after* the process is done
             remove_handler(self._handle_signal)
