@@ -145,3 +145,38 @@ async def test_terminate():
     assert proc.returncode == exitcode
     assert not proc.running
     assert not psutil.pid_exists(proc.pid)
+
+
+async def test_signal_and_wait_process_lookup_error():
+    """
+    If the underlying transport has already reaped the child, send_signal
+    raises ProcessLookupError. _signal_and_wait should treat that as
+    success: no exception, _killed and running updated, restart watcher
+    cancelled.
+    """
+    proc = SupervisedProcess(
+        inspect.currentframe().f_code.co_name, *sleep(0), always_restart=False
+    )
+    await proc.start()
+    assert proc.running
+
+    # Force the underlying Process.send_signal to raise ProcessLookupError,
+    # simulating the case where asyncio's subprocess transport has already
+    # noticed the child is gone.
+    def _raise_process_lookup(_signum):
+        raise ProcessLookupError(3, "No such process")
+
+    proc.proc.send_signal = _raise_process_lookup
+
+    # Should not raise.
+    result = await proc._signal_and_wait(signal.SIGTERM)
+
+    assert result is None
+    assert proc._killed is True
+    assert proc.running is False
+    # Let the cancellation propagate to the restart watcher.
+    try:
+        await proc._restart_process_future
+    except asyncio.CancelledError:
+        pass
+    assert proc._restart_process_future.done()
